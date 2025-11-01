@@ -1,39 +1,53 @@
-import React, { Suspense, lazy, useState } from 'react';
-import { NavLink, Route, Routes } from 'react-router-dom';
-import { OfflineQueueAlert } from './components/OfflineQueueAlert';
-import { ShareReportButton } from './components/ShareReportButton';
-import PrivacyNotice from './components/PrivacyNotice';
+import React, { useState } from 'react';
+import { AgentHub } from './components/AgentHub';
+import { FlowBuilder } from './components/FlowBuilder';
+import { RunHistory } from './components/RunHistory';
+import { EstimateEditor } from './components/EstimateEditor';
 
-const InsightsPage = lazy(() => import('./pages/InsightsPage'));
-const PriceSourcesPage = lazy(() => import('./pages/PriceSourcesPage'));
-const ReportsPage = lazy(() => import('./pages/ReportsPage'));
+const tabs = [
+  { id: 'hub', label: 'Agent Hub', description: 'Карточки агентов, фильтры и настройка профиля' },
+  { id: 'builder', label: 'Flow Builder', description: 'Граф визуального конструирования сценариев' },
+  { id: 'history', label: 'Run History', description: 'История запусков и логов' },
+  { id: 'editor', label: 'Смета', description: 'Контекст и запуск агента из редактора' }
+] as const;
+
+export type TabId = (typeof tabs)[number]['id'];
+
+const renderTab = (tab: TabId) => {
+  switch (tab) {
+    case 'builder':
+      return <FlowBuilder />;
+    case 'history':
+      return <RunHistory />;
+    case 'editor':
+      return <EstimateEditor />;
+    case 'hub':
+    default:
+      return <AgentHub />;
+  }
+};
 
 const App: React.FC = () => {
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [tab, setTab] = useState<TabId>('hub');
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <h1>Smetapro</h1>
-        <nav>
-          <NavLink to="/insights" className={({ isActive }) => (isActive ? 'active' : undefined)}>Insights</NavLink>
-          <NavLink to="/prices" className={({ isActive }) => (isActive ? 'active' : undefined)}>Источники цен</NavLink>
-          <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : undefined)}>Отчеты</NavLink>
-        </nav>
-        <ShareReportButton />
-      </aside>
-      <main className="main-content">
-        <Suspense fallback={<div>Загрузка…</div>}>
-          <Routes>
-            <Route path="/" element={<InsightsPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/prices" element={<PriceSourcesPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-          </Routes>
-        </Suspense>
-      </main>
-      <OfflineQueueAlert />
-      <PrivacyNotice open={!privacyAccepted} onAccept={() => setPrivacyAccepted(true)} />
+    <div className="container">
+      <header className="stack" style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ marginBottom: 0 }}>SmetaPro Agent Hub</h1>
+        <p style={{ marginTop: 0, color: '#4b5563' }}>
+          Управляйте AI-агентами для сметной команды: настраивайте сценарии, отслеживайте запуски и интегрируйте их в рабочие
+          процессы.
+        </p>
+        <div className="tabs">
+          {tabs.map((item) => (
+            <button key={item.id} className={item.id === tab ? 'active' : ''} onClick={() => setTab(item.id)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <small style={{ color: '#6b7280' }}>{tabs.find((item) => item.id === tab)?.description}</small>
+      </header>
+      {renderTab(tab)}
     </div>
   );
 };

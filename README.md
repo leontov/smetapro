@@ -1,6 +1,19 @@
 # smetapro
+
 Программа для составления смет
 
+## Agent Hub
+
+Веб-интерфейс на React/Vite с локальным хранилищем Dexie (IndexedDB) для управления AI-агентами:
+
+- **Agent Hub** — листинг карточек агентов, фильтры по статусу, тегам и смете, форма создания/редактирования с привязкой к сметам.
+- **Flow Builder** — визуальный конструктор сценариев на базе React Flow с узлами Prompt/Tool/Data и сериализацией графа.
+- **Run History** — история запусков, статусы, журналы, повторы.
+- **Редактор сметы** — выбор контекста сметы и запуск агента напрямую из редактора.
+
+## GenKit интеграция
+
+В проекте реализована обёртка `GenkitClient` с управлением API-ключом и пайплайном выполнения flow. Для реального API передайте ключ через `GENKIT_API_KEY` (и при необходимости `GENKIT_ENDPOINT`). Без ключа клиент работает в офлайн-режиме с мок-ответами.
 ## Интеграция с GenKit SDK
 
 ### Архитектура интеграции
@@ -69,19 +82,11 @@
 ## Скрипты
 
 ```bash
-npm install
-npm run dev        # запуск клиентского приложения
-npm run start:server # запуск API сервера (Express + cron задачи)
-npm run build
+npm install           # установка зависимостей
+npm run dev           # запуск Vite dev server
+npm run build         # production-сборка
+npm run test          # контрактные тесты (Vitest)
+npm run test:smoke    # smoke-тесты (требуется GENKIT_API_KEY)
 ```
 
-## Переменные окружения
-
-Создайте файл `.env` со значениями:
-
-```
-VITE_POSTHOG_KEY=<ключ Posthog>
-VITE_LOGROCKET_KEY=<workspace/name>
-PRICE_SOURCE_REAL_ENDPOINT=https://open.er-api.com/v6/latest/USD
-PRICE_SOURCE_MOCK_ENDPOINT=http://localhost:5173/mock/prices.json
-```
+Smoke-тест `tests/smoke/genkitSmoke.test.ts` автоматически пропускается, если ключ не задан.
