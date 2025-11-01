@@ -1,0 +1,48 @@
+<svg width="1440" height="1024" viewBox="0 0 1440 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="1024" fill="#F4F7FC"/>
+  <rect x="40" y="32" width="1360" height="64" rx="16" fill="#1B365D"/>
+  <text x="72" y="72" fill="white" font-family="Inter" font-size="28" font-weight="600">SmetaPro · Детали запуска #3821</text>
+  <rect x="40" y="120" width="400" height="864" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="72" y="176" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Резюме запуска</text>
+  <text x="72" y="216" fill="#5B6B92" font-family="Inter" font-size="14">Статус</text>
+  <text x="72" y="244" fill="#1B865D" font-family="Inter" font-size="18" font-weight="600">Успешно</text>
+  <text x="72" y="292" fill="#5B6B92" font-family="Inter" font-size="14">Продолжительность</text>
+  <text x="72" y="320" fill="#2E3A59" font-family="Inter" font-size="18" font-weight="600">3 мин 12 с</text>
+  <text x="72" y="368" fill="#5B6B92" font-family="Inter" font-size="14">Инициатор</text>
+  <text x="72" y="396" fill="#2E3A59" font-family="Inter" font-size="18" font-weight="600">Email: tenders@smetapro.ru</text>
+  <rect x="72" y="452" width="336" height="192" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="96" y="492" fill="#5B6B92" font-family="Inter" font-size="14">Ключевые метрики</text>
+  <text x="96" y="524" fill="#2E3A59" font-family="Inter" font-size="14">• 4 шага в цепочке</text>
+  <text x="96" y="552" fill="#2E3A59" font-family="Inter" font-size="14">• 0 эскалаций</text>
+  <text x="96" y="580" fill="#2E3A59" font-family="Inter" font-size="14">• 1 автоматический документ</text>
+  <rect x="72" y="668" width="336" height="240" rx="16" fill="#FDF2D7" stroke="#FFD08A" stroke-width="1.5"/>
+  <text x="96" y="708" fill="#B45F06" font-family="Inter" font-size="14" font-weight="600">Замечания</text>
+  <text x="96" y="740" fill="#B45F06" font-family="Inter" font-size="14">Рекомендуется обновить прайс лист подрядчика.</text>
+  <rect x="464" y="120" width="936" height="280" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="496" y="176" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Хронология действий</text>
+  <text x="496" y="214" fill="#5B6B92" font-family="Inter" font-size="14">Каждый шаг пайплайна с временными отметками и статусом.</text>
+  <rect x="496" y="244" width="872" height="184" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="520" y="280" fill="#2E3A59" font-family="Inter" font-size="14">09:12 · Получен запрос клиента (Email)</text>
+  <text x="520" y="312" fill="#2E3A59" font-family="Inter" font-size="14">09:13 · Сбор исходных данных из CRM</text>
+  <text x="520" y="344" fill="#2E3A59" font-family="Inter" font-size="14">09:14 · Расчет сметы и формирование КП</text>
+  <text x="520" y="376" fill="#2E3A59" font-family="Inter" font-size="14">09:15 · Отправка ответа и архивация</text>
+  <rect x="464" y="424" width="936" height="280" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="496" y="480" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Журналы взаимодействий</text>
+  <rect x="496" y="508" width="872" height="184" rx="16" fill="#101828" fill-opacity="0.92"/>
+  <text x="520" y="544" fill="#E3E8F4" font-family="IBM Plex Mono" font-size="14">[09:12:17] user: Нужна смета на монтаж вентиляции в корпусе Б.</text>
+  <text x="520" y="572" fill="#9DB4FF" font-family="IBM Plex Mono" font-size="14">[09:12:45] agent: Собираю данные проекта...</text>
+  <text x="520" y="600" fill="#9DB4FF" font-family="IBM Plex Mono" font-size="14">[09:14:02] agent: Готов черновик сметы, прикладываю PDF.</text>
+  <text x="520" y="628" fill="#E3E8F4" font-family="IBM Plex Mono" font-size="14">[09:15:10] user: Получили, спасибо!</text>
+  <rect x="464" y="724" width="936" height="260" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="496" y="780" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Артефакты запуска</text>
+  <text x="496" y="820" fill="#5B6B92" font-family="Inter" font-size="14">Сгенерированные документы и действия после завершения.</text>
+  <rect x="496" y="848" width="280" height="112" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="520" y="888" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Коммерческое предложение.pdf</text>
+  <text x="520" y="916" fill="#5B6B92" font-family="Inter" font-size="14">Обновлено 15.10 09:14</text>
+  <rect x="792" y="848" width="280" height="112" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="816" y="888" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Запись в CRM</text>
+  <text x="816" y="916" fill="#5B6B92" font-family="Inter" font-size="14">ID CRM-2045</text>
+  <rect x="1088" y="848" width="280" height="112" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="1112" y="888" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Эскалации</text>
+  <text x="1112" y="916" fill="#5B6B92" font-family="Inter" font-size="14">Нет действий</text>
+</svg>
