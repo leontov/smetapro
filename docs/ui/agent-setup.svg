@@ -1,0 +1,37 @@
+<svg width="1440" height="1024" viewBox="0 0 1440 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="1024" fill="#F5F6FA"/>
+  <rect x="40" y="32" width="1360" height="64" rx="16" fill="#1B365D"/>
+  <text x="72" y="72" fill="white" font-family="Inter" font-size="28" font-weight="600">SmetaPro · Настройка агента</text>
+  <rect x="40" y="120" width="320" height="864" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="72" y="176" fill="#2E3A59" font-family="Inter" font-size="18" font-weight="600">Навигация</text>
+  <text x="72" y="214" fill="#5B6B92" font-family="Inter" font-size="16">⚙️ Параметры</text>
+  <text x="72" y="246" fill="#5B6B92" font-family="Inter" font-size="16">📊 История запусков</text>
+  <text x="72" y="278" fill="#5B6B92" font-family="Inter" font-size="16">🧪 Тестовые сценарии</text>
+  <rect x="400" y="120" width="640" height="864" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="432" y="176" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Основные параметры</text>
+  <text x="432" y="220" fill="#5B6B92" font-family="Inter" font-size="16">Определите личность и цели агента для оптимизации поведения.</text>
+  <rect x="432" y="244" width="576" height="88" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="456" y="282" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Имя агента</text>
+  <text x="456" y="310" fill="#7A88AE" font-family="Inter" font-size="14">Например, «Аналитик тендеров»</text>
+  <rect x="432" y="352" width="576" height="136" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="456" y="392" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Роль и тон</text>
+  <text x="456" y="420" fill="#7A88AE" font-family="Inter" font-size="14">Опишите желаемое поведение и стиль ответов.</text>
+  <rect x="432" y="504" width="576" height="192" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="456" y="544" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Набор инструментов</text>
+  <text x="456" y="574" fill="#7A88AE" font-family="Inter" font-size="14">Выберите API и внутренние сервисы, доступные агенту.</text>
+  <rect x="456" y="602" width="232" height="40" rx="12" fill="#E8F0FF"/>
+  <text x="476" y="628" fill="#1B365D" font-family="Inter" font-size="14">Добавить инструмент</text>
+  <rect x="432" y="724" width="576" height="128" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="456" y="764" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Триггеры запуска</text>
+  <text x="456" y="792" fill="#7A88AE" font-family="Inter" font-size="14">Настройте расписание и условия активации.</text>
+  <rect x="1048" y="120" width="352" height="864" rx="24" fill="white" stroke="#D7DEED" stroke-width="2"/>
+  <text x="1080" y="176" fill="#2E3A59" font-family="Inter" font-size="20" font-weight="600">Превью поведения</text>
+  <rect x="1080" y="212" width="288" height="120" rx="16" fill="#F8FAFF" stroke="#D7DEED" stroke-width="1.5"/>
+  <text x="1104" y="244" fill="#2E3A59" font-family="Inter" font-size="14" font-weight="600">Пример запроса</text>
+  <text x="1104" y="274" fill="#7A88AE" font-family="Inter" font-size="14">Как агент ответит на входящий тикет?</text>
+  <rect x="1080" y="348" width="288" height="392" rx="16" fill="#FDF2D7" stroke="#FFD08A" stroke-width="1.5"/>
+  <text x="1104" y="380" fill="#B45F06" font-family="Inter" font-size="14" font-weight="600">Черновик ответа</text>
+  <text x="1104" y="408" fill="#B45F06" font-family="Inter" font-size="14">Пример реакции агента по заданным параметрам.</text>
+  <rect x="1080" y="756" width="288" height="64" rx="16" fill="#1B365D"/>
+  <text x="1140" y="796" fill="white" font-family="Inter" font-size="18" font-weight="600">Сохранить агента</text>
+</svg>
