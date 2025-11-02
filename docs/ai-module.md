@@ -1,30 +1,27 @@
-# AI Agent Module Specification
+# Спецификация модуля ИИ-агентов
 
-## Objectives
-Provide a modular framework for configuring, executing, and monitoring AI-driven workflows that assist with estimating tasks while maintaining transparency, control, and auditability.
+## Цели
+Создать модуль, позволяющий конфигурировать, запускать и мониторить ИИ-флоу, которые помогают в расчёте смет, при этом гарантируя прозрачность, контроль и возможность аудита.
 
-## Architecture Components
+## Архитектурные компоненты
 - **AgentRegistry**
-  - Stores `AgentConfig` objects in IndexedDB.
-  - Exposes CRUD operations and emits change events to subscribed UI components.
-  - Supports versioning of configurations and rollback to previous revisions.
+  - Хранит `AgentConfig` в IndexedDB, ведёт версионность и историю изменений.
+  - Обеспечивает CRUD-операции, события для UI и синхронизацию с бэкендом.
 - **FlowEngine**
-  - Executes a sequence of `AgentFlowStep` objects.
-  - Supports step types: `PromptStep`, `ToolStep`, `TransformStep`, `DecisionStep`.
-  - Handles branching and looping via explicit conditions.
-  - Utilizes async generator pattern to stream intermediate results to UI.
+  - Выполняет последовательность шагов `AgentFlowStep` (prompt/tool/transform/decision).
+  - Поддерживает ветвления, циклы и стриминг промежуточных результатов через async-генераторы.
+  - Управляет тайм-аутами и повторными попытками.
 - **ContextBuilder**
-  - Aggregates data: selected estimate snapshot, historical prices, supplier feeds, user annotations.
-  - Applies filters based on agent permissions and scope.
-  - Sanitizes data (PII removal) before sending to Gemini.
+  - Собирает данные: выбранная смета, исторические цены, каталоги поставщиков, пользовательские заметки.
+  - Фильтрует данные по разрешениям, удаляет PII перед отправкой в Gemini.
 - **ExecutionLogService**
-  - Persists `AgentSession` records with timestamps, token counts, cost estimation, step outputs.
-  - Provides search/filter capabilities and exports logs to JSON/CSV for auditing.
+  - Записывает `AgentSession`, токены, время, стоимость, вывод шагов.
+  - Предоставляет поиск/фильтрацию, экспорт логов (JSON/CSV) и метрики.
 - **GenKitConnector**
-  - Wraps GenKit SDK with standardized error handling, retry policy, and instrumentation hooks.
-  - Supports mock mode for testing (predefined responses) and rate limit backoff.
+  - Обёртка над GenKit SDK с единой обработкой ошибок, бэкофами и трейсингом.
+  - Имеет режим «песочницы» с мок-ответами для тестов и демо.
 
-## Data Interfaces
+## Типы данных (TypeScript)
 ```ts
 type AgentConfig = {
   id: string;
@@ -45,11 +42,7 @@ type AgentConfig = {
   updatedAt: string;
 };
 
-type AgentFlowStep =
-  | PromptStep
-  | ToolStep
-  | TransformStep
-  | DecisionStep;
+type AgentFlowStep = PromptStep | ToolStep | TransformStep | DecisionStep;
 
 type PromptStep = {
   kind: 'prompt';
@@ -76,7 +69,7 @@ type DecisionStep = {
   kind: 'decision';
   id: string;
   condition: ConditionExpression;
-  onTrue: string; // next step id
+  onTrue: string;
   onFalse: string;
 };
 
@@ -94,49 +87,50 @@ type FlowResult = {
 };
 ```
 
-## Execution Lifecycle
-1. **Initialization**: user selects agent & target estimate; ContextBuilder assembles `AgentContext`.
-2. **Validation**: FlowEngine validates config (required bindings, step graph acyclic) before execution.
-3. **Run**:
-   - Emit `sessionStarted` event and persist initial session record.
-   - Iterate through flow steps:
-     - PromptStep → GenKitConnector `generate` call with compiled prompt.
-     - ToolStep → executes registered tool (price fetcher, PDF generator, etc.).
-     - TransformStep → apply deterministic transformation (e.g., convert Markdown to structured JSON).
-     - DecisionStep → evaluate expression using last output.
-   - Stream intermediate outputs to UI for transparency.
-4. **Completion**: update session status, store outputs, trigger notifications, enqueue follow-up actions if configured.
-5. **Failure Handling**: categorize errors (`ValidationError`, `RateLimitError`, `NetworkError`, `ModelError`). Provide recovery options (retry, adjust inputs, fallback agent).
+## Жизненный цикл выполнения
+1. **Инициализация**: пользователь выбирает агента и смету, `ContextBuilder` собирает `AgentContext`.
+2. **Валидация**: `FlowEngine` проверяет корректность графа (цикл, обязательные данные, права).
+3. **Запуск**:
+   - Создаётся запись `AgentSession` со статусом `Pending`.
+   - Для каждого шага:
+     - `PromptStep` → запрос к GenKit/Gemini.
+     - `ToolStep` → вызов зарегистрированного инструмента (API поставщика, SheetJS и т. п.).
+     - `TransformStep` → локальные преобразования (нормализация цен, генерация Markdown → JSON).
+     - `DecisionStep` → проверка условия, выбор следующего шага.
+   - Результаты стримятся в UI, чтобы пользователь видел прогресс.
+4. **Завершение**: статус обновляется, результаты сохраняются, создаются уведомления и задачи синхронизации.
+5. **Обработка ошибок**: классификация (`ValidationError`, `RateLimitError`, `NetworkError`, `ModelError`), предложены варианты восстановления (повтор, fallback, ручное действие).
 
-## Tooling & Extensibility
-- **Tool Registry**: plugin API to register tools with metadata (name, description, required auth). Tools run in secure sandbox to avoid blocking UI thread.
-- **Price Intelligence Tools**: connectors for supplier APIs, CSV import parser, web scraper (headless) executed via serverless function when available.
-- **Report Generators**: convert agent insights to PDF/XLSX by composing templates with templating engine (Handlebars).
+## Инструменты и расширения
+- **Tool Registry**: плагины регистрируются с описанием, требуемыми правами и ограничениями. Запуск инструментов — в воркерах/веб-воркерах.
+- **Ценовые коннекторы**: API поставщиков, парсер CSV/Excel, веб-скрейперы (через серверные функции).
+- **Генераторы отчётов**: обёртки над PDFMake/SheetJS, которые могут использовать результаты агентов.
+- **Автоматизация**: планировщик запуска по расписанию, триггеры на события (обновление прайса, изменение статуса сметы).
 
-## UI Touchpoints
-- **Agent Gallery**: card grid showing usage stats, success rate, last run.
-- **Configurator**: step-based wizard to define prompt, data bindings, output preferences; includes live preview (mock run) and validation warnings.
-- **Session Viewer**: timeline of flow steps with status badges, raw prompts/responses (with sensitive data redacted).
-- **Playground**: quick experiment area to test variations without affecting saved agents.
+## UI-точки
+- Галерея агентов: карточки с показателями (успехи, средняя стоимость, последний запуск).
+- Мастер настройки: пошаговый процесс (цель → контекст → промпт → проверка → публикация) с предпросмотром результата.
+- Просмотр сессии: таймлайн шагов, журнал запросов/ответов, кнопки повторного запуска и экспорта.
+- Песочница: быстрые эксперименты без сохранения в каталог.
 
-## Security & Compliance
-- Encrypt stored prompts and API keys using WebCrypto with keys derived from user credentials.
-- Provide `sensitiveFields` annotation to automatically redact data before logs are persisted.
-- Maintain audit log for who executed which agent, when, and with what input context.
-- Respect Gemini usage policies; implement guardrails (max tokens per day, manual approval for high-cost runs).
+## Безопасность и комплаенс
+- Шифрование конфигураций и ключей через WebCrypto.
+- Политика ретенции: чувствительные данные в логах автоматически обрезаются через 30 дней.
+- Ограничение стоимости: дневные лимиты, предупреждения при превышении.
+- Соблюдение политики Gemini: фильтры на запрещённый контент, пользовательское подтверждение перед отправкой больших массивов данных.
 
-## Testing Strategy
-- **Unit Tests**: validate flow graph execution, prompt templating, decision branching.
-- **Integration Tests**: run mock GenKit connector to ensure deterministic outputs; test error pathways.
-- **Load Tests**: simulate concurrent agent runs to validate queue and rate limit handling.
-- **UX Tests**: observe configuration wizard on mobile to ensure clarity and ease of use.
+## Тестирование
+- Юнит-тесты: проверка обработки графа, темплейтов, ветвлений.
+- Интеграционные тесты: мок GenKit, симуляция ошибок сети/лимитов.
+- Нагрузочные тесты: параллельные запуски, измерение времени и очередей.
+- UX-тесты: мобильный сценарий настройки агента, анализ понятности текстов.
 
-## Monitoring & Analytics
-- Instrument FlowEngine with OpenTelemetry traces.
-- Capture metrics: run duration, success rate, average cost, most used tools.
-- Surface insights in Reports module; trigger alerts when failure rate exceeds threshold.
+## Мониторинг и аналитика
+- Инструментирование через OpenTelemetry → отправка в выбранный бекенд (например, Grafana Tempo).
+- Метрики: длительность, количество токенов, успех/ошибка, популярные инструменты.
+- Алерты при росте ошибок > 5% или задержке > 30 секунд.
 
-## Roadmap Enhancements
-- Introduce collaborative agents with shared templates and organization-level governance.
-- Support multi-modal inputs (image-based site inspections) once available via Gemini.
-- Add reinforcement learning loop based on user feedback to improve prompt templates.
+## Дорожная карта развития
+1. Совместные агенты для команд (общие библиотеки шаблонов, доступы уровня организации).
+2. Поддержка мультимодальных входов (фото обмеров, чертежи) по мере появления в Gemini.
+3. Обучение на обратной связи пользователей: рейтинг ответов, автоматическая корректировка промптов.

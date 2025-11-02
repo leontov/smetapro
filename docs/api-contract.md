@@ -1,119 +1,166 @@
-# API Contract
+# API-контракты QuickEstimate Builder
 
-> **Note**: The project targets offline-first workflows; the API is optional but designed for future synchronization and collaboration features.
+> **Примечание:** реализация серверной части опциональна. Контракты описывают ожидаемый REST API при включённой синхронизации.
 
-## Authentication
-- **Endpoint**: `POST /v1/auth/session`
-- **Body**: `{ "email": string, "otp": string }`
-- **Response**: `{ "token": string, "refreshToken": string, "expiresIn": number }`
-- Tokens are JWTs signed with rotating keys; refresh performed via `POST /v1/auth/token`.
+## Аутентификация
+- `POST /auth/login`
+  - Вход: `{ email: string }` — отправка magic link или OTP.
+  - Выход: `{ requestId: string }`.
+- `POST /auth/verify`
+  - Вход: `{ requestId: string, code: string }`.
+  - Выход: `{ accessToken: string, refreshToken: string, expiresIn: number }`.
+- `POST /auth/refresh`
+  - Вход: `{ refreshToken: string }` → новый `accessToken`.
 
-## Projects & Estimates
-### List Estimates
-- `GET /v1/estimates`
-- Query params: `status`, `tag`, `updatedAfter`, `limit`, `cursor`
-- Response: `{ "data": ProjectEstimate[], "nextCursor": string | null }`
+Токены передаются в заголовке `Authorization: Bearer <token>`.
 
-### Create Estimate
-- `POST /v1/estimates`
-- Body: `ProjectEstimateCreate` (name, currency, optional templateId)
-- Response: `{ "data": ProjectEstimate }`
+## Сметы
+### Список проектов
+- `GET /estimates`
+  - Параметры: `status?`, `tag?`, `updatedAfter?`, `limit`, `offset`.
+  - Ответ: `{ items: ProjectEstimateDto[], total: number }`.
 
-### Update Estimate Metadata
-- `PATCH /v1/estimates/{estimateId}`
-- Body: JSON Patch operations limited to metadata fields
-- Response: `{ "data": ProjectEstimate }`
+### Создание/обновление
+- `POST /estimates`
+  - Тело: `ProjectEstimateCreateDto`.
+  - Ответ: `ProjectEstimateDto`.
+- `PUT /estimates/{id}`
+  - Тело: `ProjectEstimateUpdateDto` (partial, JSON Merge Patch).
+  - Ответ: `ProjectEstimateDto`.
+- `DELETE /estimates/{id}`
+  - Ответ: `204 No Content`.
 
-### Sync Estimate Items
-- `PUT /v1/estimates/{estimateId}/items`
-- Body: `{ "version": string, "operations": DeltaOperation[] }`
-- Response: `{ "data": { "version": string, "conflicts": Conflict[] } }`
+### Позиции
+- `GET /estimates/{id}/items`
+  - Параметры: `parentId?`, `page`, `pageSize`.
+  - Ответ: `{ items: EstimateItemDto[], total: number }`.
+- `POST /estimates/{id}/items`
+  - Тело: `EstimateItemCreateDto`.
+  - Ответ: `EstimateItemDto`.
+- `PATCH /estimates/{id}/items/{itemId}`
+  - Тело: JSON Patch.
+  - Ответ: `EstimateItemDto`.
+- `DELETE /estimates/{id}/items/{itemId}` → `204`.
 
-### Export Estimate
-- `POST /v1/estimates/{estimateId}/exports`
-- Body: `{ "format": "pdf" | "xlsx", "options": object }`
-- Response: `202 Accepted` with `Location` header for job status
-- Poll job via `GET /v1/exports/{jobId}` until ready.
+### Версии
+- `GET /estimates/{id}/versions`
+  - Ответ: `EstimateVersionDto[]`.
+- `POST /estimates/{id}/versions`
+  - Тело: `{ label?: string, includeAttachments?: boolean }`.
+  - Ответ: `EstimateVersionDto`.
+- `GET /estimates/{id}/versions/{versionId}`
+  - Ответ: подробный снапшот.
 
-## Versions
-- `GET /v1/estimates/{estimateId}/versions`
-- `POST /v1/estimates/{estimateId}/versions` to create manual snapshot
-- Each version returns metadata + diff summary.
+## Агенты
+- `GET /agents`
+  - Ответ: `AgentConfigDto[]`.
+- `POST /agents`
+  - Тело: `AgentConfigCreateDto`.
+  - Ответ: `AgentConfigDto`.
+- `PUT /agents/{id}`
+  - Тело: `AgentConfigUpdateDto`.
+  - Ответ: `AgentConfigDto`.
+- `DELETE /agents/{id}` → `204`.
 
-## Agents
-### List Agents
-- `GET /v1/agents`
-- Response: `{ "data": AgentConfig[] }`
+### Сессии агентов
+- `GET /agent-sessions`
+  - Параметры: `agentId?`, `projectId?`, `status?`, `from?`, `to?`.
+  - Ответ: `{ items: AgentSessionDto[], total: number }`.
+- `POST /agent-sessions`
+  - Тело: `{ agentId: string, projectId: string, inputContext?: Record<string, unknown> }`.
+  - Ответ: `AgentSessionDto`.
+- `GET /agent-sessions/{id}`
+  - Ответ: полный лог.
+- `POST /agent-sessions/{id}/retry`
+  - Ответ: `202 Accepted` + обновлённый статус.
 
-### Create Agent
-- `POST /v1/agents`
-- Body: `AgentConfigInput`
-- Validates prompt template placeholders and permissions.
+## Отчёты
+- `POST /reports/export`
+  - Тело: `{ type: 'pdf' | 'xlsx', projectId: string, templateId?: string, versionId?: string }`.
+  - Ответ: `{ jobId: string }`.
+- `GET /reports/export/{jobId}`
+  - Ответ: `{ status: 'pending' | 'running' | 'success' | 'failed', downloadUrl?: string }`.
 
-### Update Agent
-- `PUT /v1/agents/{agentId}` with full representation, or `PATCH` for partial updates.
+## Синхронизация
+- `POST /sync/push`
+  - Тело: `{ deviceId: string, mutations: SyncMutationDto[] }`.
+  - Ответ: `{ accepted: number, rejected: SyncMutationError[] }`.
+- `GET /sync/pull`
+  - Параметры: `deviceId`, `since` (timestamp).
+  - Ответ: `{ changes: SyncChangeDto[], serverTime: string }`.
 
-### Run Agent Flow
-- `POST /v1/agents/{agentId}/runs`
-- Body: `{ "estimateId": string, "options": object }`
-- Response: `{ "data": AgentSession }` (status `Pending`)
-- Subscribe via WebSocket `wss://api.example.com/v1/agents/{agentId}/runs/{runId}` for streaming output; fallback to long polling.
+## DTO (сокращённо)
+```ts
+type ProjectEstimateDto = {
+  id: string;
+  name: string;
+  status: 'Draft' | 'InReview' | 'Approved' | 'Archived';
+  currency: string;
+  baseLaborRate: number;
+  markup: number;
+  tags: string[];
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
-## Sessions & Logs
-- `GET /v1/agent-sessions?agentId=&status=&from=&to=` returns paginated sessions.
-- `GET /v1/agent-sessions/{sessionId}` returns detailed log including intermediate tool responses.
+type EstimateItemDto = {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  type: 'Material' | 'Labor' | 'Equipment' | 'Service' | 'Allowance';
+  description: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  source: 'Manual' | 'SupplierAPI' | 'Historical' | 'AI';
+  notes?: string;
+  metadata?: Record<string, unknown>;
+};
 
-## Price Sources
-- `GET /v1/price-sources` to list connected suppliers.
-- `POST /v1/price-sources/{sourceId}/refresh` triggers background update.
+type AgentConfigDto = {
+  id: string;
+  name: string;
+  category: 'Analysis' | 'Update' | 'Report' | 'Custom';
+  description: string;
+  model: string;
+  permissions: PermissionScopeDto;
+  updatedAt: string;
+};
 
-## Files & Attachments
-- `POST /v1/files` accepts multipart uploads; returns `{ fileId, url, checksum }`.
-- `GET /v1/files/{fileId}` downloads content.
-- Large files chunked using tus protocol extension.
-
-## Sync Endpoints
-### Pull Changes
-- `GET /v1/sync/pull?since={timestamp}` returns `{ deltaPacks: DeltaPack[] }`.
-- DeltaPack includes entity, operation, payload, version vector.
-
-### Push Changes
-- `POST /v1/sync/push`
-- Body: `{ "deviceId": string, "changes": SyncQueueItem[] }`
-- Response includes per-change status and conflict resolutions.
-
-## Webhooks
-- `POST /v1/webhooks/price-update`
-  - Triggered by suppliers with payload `{ sourceId, items: [{ sku, price, currency, effectiveDate }] }`
-- `POST /v1/webhooks/agent-callback`
-  - Receives asynchronous results from long-running agent flows or third-party tools.
-
-## Error Handling
-- Standardized error format:
-```json
-{
-  "error": {
-    "code": "string",
-    "message": "human readable",
-    "details": object,
-    "requestId": "uuid"
-  }
-}
+type AgentSessionDto = {
+  id: string;
+  agentId: string;
+  projectId: string;
+  status: 'Pending' | 'Running' | 'Success' | 'Failed' | 'RequiresAction';
+  startedAt: string;
+  completedAt?: string;
+  metrics: {
+    totalTokens: number;
+    latencyMs: number;
+    costEstimate: number;
+  };
+};
 ```
-- HTTP status codes follow RFC 9110.
-- Rate limits communicated via `429` with `Retry-After` header.
 
-## Versioning & Stability
-- API prefixed with `/v1`; breaking changes announced 90 days in advance.
-- Feature flags and capabilities returned in response headers `X-App-Capabilities`.
+## Webhook-и
+- `/webhooks/pricing-updated`
+  - Событие: поставщик обновил прайс.
+  - Тело: `{ supplierId, items: [{ sku, price, currency, validUntil }] }`.
+- `/webhooks/report-ready`
+  - Событие: сервер подготовил отчёт.
+  - Тело: `{ jobId, downloadUrl }`.
 
-## Security
-- All endpoints require HTTPS.
-- Tokens verified with audience claims per device.
-- Row-level security enforced via user permissions; server validates that requested estimates belong to the authenticated tenant.
-- Payload size limited to 5MB per request (except tus uploads).
+## Ошибки
+- Стандартный ответ об ошибке: `{ error: { code: string, message: string, details?: Record<string, unknown> } }`.
+- Коды: `AUTH_REQUIRED`, `VALIDATION_FAILED`, `NOT_FOUND`, `RATE_LIMITED`, `CONFLICT`, `INTERNAL_ERROR`.
 
-## Open Questions
-- Do we expose GraphQL gateway for advanced analytics?
-- Should agent runs allow streaming SSE for cost-effective updates on Safari?
-- Are supplier webhooks authenticated via HMAC secrets or mTLS?
+## Ограничения и квоты
+- `POST /agent-sessions` — не более 30 запусков в час на пользователя (ограничивается на сервере).
+- Размер вложений при экспорте — до 20 МБ.
+- Очередь синхронизации — до 500 операций на одно устройство без подтверждения сервера.
+
+## Безопасность
+- Все запросы идут по HTTPS.
+- Поддержка аппаратных токенов: опциональный WebAuthn для администраторов.
+- Логи действий пользователя доступны через `GET /audit-logs` (ограничено ролью `Owner`).

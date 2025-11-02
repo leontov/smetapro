@@ -1,74 +1,76 @@
-# Frontend Architecture Overview
+# Архитектура фронтенда QuickEstimate Builder
 
-## Application Shell & Navigation
-- **Framework**: TypeScript SPA built with React 18 + Vite for bundling, emphasizing tree-shaking and fast HMR.
-- **Routing**: React Router v6 with nested routes and lazy loading for feature islands.
-- **Navigation Paradigm**:
-  - Bottom tab bar with five primary destinations (Dashboard, Estimates, Agents, Reports, Settings).
-  - Modal stack for context-sensitive overlays (quick create, file import, agent run history).
-  - Global command palette triggered via floating action button or keyboard shortcut (`⌘K` when using desktop mode).
-- **Application Shell Components**:
-  - `<AppRoot>`: initializes providers (state, theme, i18n, error boundaries).
-  - `<AppFrame>`: renders tab navigation, handles viewport-safe areas (iOS notch) and sticky action bar.
-  - `<OfflineBanner>`: warns about connectivity and exposes manual sync controls.
+## Общий подход
+- **Стек**: TypeScript + React 18 + Vite. React выбран за развитую экосистему и поддержку мобильных паттернов, Vite — за быструю разработку и готовые PWA-плагины.
+- **SPA + PWA**: единый бандл, сервис-воркер на базе Workbox, манифест с iOS-специфичными метаданными.
+- **Feature-Sliced Design**: код организован по модулям `src/features/<feature>` с локальными состояниями, сервисами и виджетами. Общие библиотеки лежат в `src/shared`.
+- **Мобильный-first**: компоненты оптимизированы под портретный режим, используется `window.visualViewport` для корректировки safe areas на iPhone 15.
 
-## Pages & Feature Modules
+## Каркас приложения и навигация
+- `<AppRoot>` — точка входа; подключает провайдеры (Zustand, React Query, i18n, темизация, маршрутизатор, обработчики ошибок).
+- `<AppShell>` — отображает нижнюю таб-бар-навигацию (Dashboard, Estimates, Agents, Reports, Settings) и плавающую панель действий.
+- `<ModalHost>` — стек модальных окон (быстрое создание, импорты, история запусков агентов).
+- Команда доступа: жесты и клавиатурные сокращения (`⌘K` на десктопе) открывают глобальную командную палитру.
+- Маршруты загружаются лениво, каждая вкладка — независимый чанк.
+
+## Страницы и ключевые модули
 1. **Dashboard**
-   - Widgets: recent estimates, sync status, quick-start actions, notifications.
-   - Data Sources: cached metrics from IndexedDB, realtime updates via background sync events.
+   - Виджеты: последние сметы, статусы синхронизации, уведомления об актуализации, прогресс агента.
+   - Источники данных: IndexedDB (кэш), фоновые события синхронизации.
 2. **Estimate Directory**
-   - Features: search, filters (status, tags, owner), bulk actions (export, archive).
-   - Components: `<EstimateList>`, `<EstimateFilterDrawer>`, `<QuickImportButton>`.
+   - Возможности: полнотекстовый поиск, фильтры (статус, теги, исполнители), массовые действия (экспорт, архивирование).
+   - Компоненты: `<EstimateList>`, `<FilterDrawer>`, `<BulkActionsToolbar>`.
 3. **Estimate Workspace**
-   - Sub-sections: Summary header, hierarchical bill of quantities, change timeline, agent assistant panel.
-   - Key interactions: inline editing with optimistic updates, swipe gestures for quick actions, diff view between versions.
+   - Подразделы: сводка (итоги, KPI), иерархическое дерево позиций, таймлайн изменений, панель советов ИИ.
+   - Функции: оптимистичное редактирование, группировка, сравнение версий, быстрые заметки.
 4. **Agents Hub**
-   - Components: `<AgentGallery>`, `<AgentConfigurator>`, `<FlowDebugger>`, `<SessionLogViewer>`.
-   - Supports cloning templates, editing prompt blocks, connecting external data sources.
+   - Карточки агентов, мастер настройки, дебаггер флоу, просмотр логов.
+   - Поддержка копирования шаблонов, подключения источников (CSV, API поставщиков, исторические каталоги).
 5. **Reports & Insights**
-   - Visualizations: trend charts, category breakdowns, comparison matrix.
-   - Export flows for PDF/XLSX with progress indicators and background generation when online.
+   - Диаграммы (строчные/столбчатые, пай), матрица сравнения смет, экспорт PDF/XLSX.
+   - Асинхронная генерация: прогресс показывает сервис-воркер; offline — ставит задачу в очередь.
 6. **Settings & Support**
-   - Subpages: profile, integrations, storage management, PWA tips, onboarding library.
+   - Профиль, управление подключениями, чистка локального хранилища, советы по установке PWA на iOS, центр онбординга.
 
-Each feature module is encapsulated with its own slice of state, routes, services, and UI components under `src/features/<module>` following a feature-sliced architecture.
+## Управление состоянием
+- **Zustand** + immer для глобального состояния (легковесный, хорошо работает офлайн). Срезы:
+  - `authSlice`: сессия пользователя, ключи шифрования, признаки онбординга.
+  - `estimateSlice`: список проектов, дерево позиций, версии, агрегаты.
+  - `agentSlice`: конфигурации, статус запусков, последние ответы.
+  - `syncSlice`: очередь операций, конфликты, статус соединения.
+  - `uiSlice`: уведомления, модальные окна, состояние командной палитры.
+- **React Query** отвечает за общение с сервером/облаком, кэширование и актуализацию данных, когда подключение доступно.
+- **IndexedDB** (через Dexie + `zustand/persist`) хранит основное содержимое; используется стратегия Write-Behind: изменения сначала записываются в локальную БД, затем попадают в очередь синхронизации.
 
-## State Management
-- **Global Store**: Zustand with immer for ergonomic immutable updates; persisted slices via IndexedDB using `zustand/persist` adapter.
-- **Slice Overview**:
-  - `authSlice`: user session, permissions, encryption keys.
-  - `estimateSlice`: projects, items, versions, derived totals.
-  - `agentSlice`: agent configurations, runtime status, session logs.
-  - `syncSlice`: queue, conflicts, connectivity flags.
-  - `uiSlice`: toasts, modals, command palette state.
-- **Async Flow**: `@tanstack/react-query` manages server communication, caching, and background revalidation while Zustand holds canonical local state.
-- **Offline Strategy**: writes routed through a `MutationQueue` that records intents, executes immediately against local state, and persists to `SyncQueue` for later transmission.
+## Сервис-воркер и офлайн
+- Генерация через Workbox CLI.
+- Стратегии кэширования:
+  - `StaleWhileRevalidate` для статики и манифеста.
+  - `NetworkFirst` для API-запросов с фолбэком на кэшированные ответы.
+  - `CacheFirst` для шаблонов документов и справки.
+- Background Sync для отложенной отправки очереди `SyncQueue`.
+- Уведомление об обновлениях: при новой версии воркера показывается баннер с предложением перезапуска.
 
-## Data Access Layer
-- **Repositories** map domain models to persistence mechanisms:
-  - `EstimateRepository`: handles IndexedDB CRUD, version snapshots, merge policies.
-  - `AgentRepository`: stores configs, encrypted credentials, usage stats.
-  - `SyncRepository`: manages outgoing/incoming delta packs.
-- Repositories expose reactive subscriptions (via RxJS Subject) to inform UI about updates triggered by background sync.
-- Local schema migrations managed through Dexie; migrations versioned alongside app releases.
+## Слой данных и интеграции
+- Репозитории (классические сервисы): `EstimateRepository`, `AgentRepository`, `SyncRepository`, `ReportRepository`.
+- Подписки на изменения реализуются через RxJS Subjects; UI получает обновления, даже если данные изменились в фоне.
+- Миграции IndexedDB версионированы (Dexie). Планы данных документированы в `docs/domain-model.md`.
+- Безопасность: конфиденциальные поля шифруются с помощью WebCrypto (AES-GCM), ключи выводятся из пароля пользователя (PBKDF2).
 
-## Service Worker & PWA Enhancements
-- **Service Worker** built with Workbox:
-  - Precaches static assets with `StaleWhileRevalidate` strategy.
-  - Runtime caching for API calls (`NetworkFirst`) and document templates (`CacheFirst`).
-  - Background sync plugin flushes queued mutations when connectivity returns.
-  - Handles push notifications for agent job completion (limited on iOS; fallback to in-app alerts).
-- **Manifest** tuned for iOS (display `standalone`, theme colors, maskable icons) and registers custom splash screens.
-- **Update Strategy**: when new SW is available, display `New version ready` toast allowing users to refresh after critical work is saved.
+## Сквозные требования
+- **Обработка ошибок**: глобальный error boundary + контекстные уведомления, очередь для офлайн-логов в Sentry.
+- **Интернационализация**: FormatJS; пакеты переводов кэшируются в IndexedDB; поддержка русского и английского на старте.
+- **Доступность**: ARIA-атрибуты, фокус-ловушки, тесты VoiceOver. Размер интерактивных зон ≥ 44px.
+- **Темизация**: дизайн-токены в CSS-переменных, переключение светлой/тёмной/контрастной темы.
 
-## Cross-Cutting Concerns
-- **Error Handling**: global error boundary, feature-level error components, logging to Sentry when online with offline queue fallback.
-- **Internationalization**: `@formatjs/intl` with translation bundles stored in IndexedDB for offline use.
-- **Accessibility**: focus management for modals, ARIA labels on custom components, VoiceOver tested flows.
-- **Theming**: design tokens exported to CSS variables; support for light/dark and high-contrast modes.
+## Инструменты разработки и тестирования
+- ESLint + Prettier + Stylelint (правила адаптированы под TypeScript и Tailwind).
+- Storybook с мобильными вьюпортами iPhone 15, интеграция с Figma-токенами.
+- MSW для имитации API и ответов GenKit.
+- Playwright Component + E2E с мобильной эмуляцией, Lighthouse для аудитов PWA и производительности.
 
-## Development Tooling
-- ESLint + Prettier + Stylelint enforcing consistent code quality.
-- Storybook Mobile Viewports for rapid UI iteration with design tokens.
-- Playwright component tests to validate interactive behavior under touch simulations.
-- Mock Service Worker (MSW) for simulating API and GenKit responses in development and testing.
+## Особенности для iPhone 15 (Safari PWA)
+- Добавляются `apple-mobile-web-app-capable`, `apple-touch-icon`, `maskable icons` и splash-экраны соответствующих размеров.
+- Учитываем ограничения Safari: отсутствует полноценный push, ограниченный Background Sync. При отсутствии системных уведомлений — используем локальные баннеры и бейджи.
+- Тестируем плавность скролла и жестов (swipe actions, pull-to-refresh) на реальном устройстве; оптимизируем рендеринг списков через виртуализацию (React Window).
+- Контролируем размер IndexedDB (< 1 ГБ): реализуем очистку старых версий, архивов и больших вложений, а также компрессию.

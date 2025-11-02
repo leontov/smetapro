@@ -1,119 +1,121 @@
-# Domain Model
+# Доменная модель QuickEstimate Builder
 
-## Core Entities
-### ProjectEstimate
-Represents a construction estimate project.
-- `id`: UUID
-- `name`: string
-- `status`: enum `Draft | InReview | Approved | Archived`
-- `currency`: ISO 4217 code
-- `baseLaborRate`: number (per hour)
-- `markup`: number (percentage applied to subtotal)
-- `tags`: string[]
-- `ownerId`: UUID
-- `createdAt` / `updatedAt`: ISO timestamps
-- `version`: current version identifier
-- `settings`: object containing rounding, tax, locale preferences
+## Основные сущности
+### ProjectEstimate (Смета проекта)
+- `id`: UUID.
+- `name`: строка.
+- `status`: `Draft | InReview | Approved | Archived`.
+- `currency`: код ISO 4217.
+- `baseLaborRate`: ставка труда (в валюте сметы).
+- `markup`: наценка в процентах.
+- `tags`: список строк.
+- `ownerId`: UUID владельца.
+- `createdAt` / `updatedAt`: ISO-временные метки.
+- `version`: активная версия.
+- `settings`: параметры округления, налогов, локали, выбранные единицы измерения.
 
-### EstimateItem
-Individual line within an estimate.
-- `id`: UUID
-- `projectId`: UUID
-- `parentId`: UUID | null (allows hierarchical grouping)
-- `type`: enum `Material | Labor | Equipment | Service | Allowance`
-- `description`: string
-- `quantity`: number
-- `unit`: string (e.g., m², hour)
-- `unitPrice`: number
-- `source`: enum `Manual | SupplierAPI | Historical | AI`
-- `adjustments`: array of modifiers `{ reason, delta, appliedBy, appliedAt }`
-- `notes`: rich-text markdown
-- `attachments`: file references (e.g., supplier quotes)
-- `metadata`: extensible key/value map for integrations
+### EstimateItem (Позиция сметы)
+- `id`: UUID.
+- `projectId`: UUID родительской сметы.
+- `parentId`: UUID или `null` — для иерархии.
+- `type`: `Material | Labor | Equipment | Service | Allowance`.
+- `description`: текст.
+- `quantity`: число (≥ 0).
+- `unit`: строка (м², час и т. п.).
+- `unitPrice`: число (≥ 0).
+- `source`: `Manual | SupplierAPI | Historical | AI`.
+- `adjustments`: массив `{ reason, delta, appliedBy, appliedAt }`.
+- `notes`: Markdown.
+- `attachments`: ссылки на файлы.
+- `metadata`: произвольный словарь для интеграций.
 
-### EstimateVersion
-Snapshot of an estimate at a point in time.
-- `id`: UUID
-- `projectId`: UUID
-- `label`: string (e.g., `Initial`, `Client feedback 1`)
-- `createdAt`: timestamp
-- `createdBy`: user reference
-- `diff`: compressed delta from previous version
-- `totals`: cached summary (labor, materials, tax, grand total)
+### EstimateVersion (Версия сметы)
+- `id`: UUID.
+- `projectId`: UUID.
+- `label`: человекочитаемое название.
+- `createdAt`: timestamp.
+- `createdBy`: ссылка на пользователя.
+- `diff`: JSON Patch или другой компактный формат, описывающий изменения.
+- `totals`: кешированные показатели (материалы, труд, налоги, итог).
 
-### AgentConfig
-Defines a reusable AI workflow.
-- `id`: UUID
-- `name`: string
-- `category`: enum `Analysis | Update | Report | Custom`
-- `promptTemplate`: structured prompt with variables
-- `flow`: ordered list of steps (prompt, tool invocation, transformation)
-- `dataBindings`: references to datasets (estimates, price catalogs, custom files)
-- `model`: Gemini model identifier
-- `temperature`, `topK`, `maxTokens`: model parameters
-- `outputFormat`: enum `Markdown | JSON | CSV | Custom`
-- `permissions`: scope of accessible projects and data types
-- `ownerId`: user reference
+### AgentConfig (Конфигурация агента)
+- `id`: UUID.
+- `name`: строка.
+- `category`: `Analysis | Update | Report | Custom`.
+- `description`: короткое пояснение задачи.
+- `promptTemplate`: массив блоков (system, user, tool hints).
+- `flow`: последовательность шагов (см. `docs/ai-module.md`).
+- `dataBindings`: привязки к данным (сметы, прайс-листы, пользовательские файлы).
+- `model`: идентификатор модели Gemini.
+- `temperature`, `topK`, `maxTokens`: параметры генерации.
+- `outputFormat`: `Markdown | JSON | CSV | Custom`.
+- `permissions`: область доступа (проекты, типы данных).
+- `schedule`: опциональные параметры автозапуска.
+- `createdAt`, `updatedAt`.
 
-### AgentSession
-Execution trace of a workflow.
-- `id`: UUID
-- `agentId`: UUID
-- `trigger`: enum `Manual | Scheduled | Event`
-- `status`: enum `Pending | Running | Success | Failed | RequiresAction`
-- `startedAt` / `completedAt`: timestamps
-- `inputContext`: serialized snapshot of data provided to the agent
-- `output`: response payload (stored as JSON + attachments)
-- `metrics`: token usage, latency, cost estimate
-- `notes`: manual annotations
+### AgentSession (Сессия агента)
+- `id`: UUID.
+- `agentId`: UUID.
+- `trigger`: `Manual | Scheduled | Event`.
+- `status`: `Pending | Running | Success | Failed | RequiresAction`.
+- `startedAt` / `completedAt`.
+- `inputContext`: сериализованный контекст запуска.
+- `output`: JSON-ответ + вложения.
+- `metrics`: токены, задержка, стоимость.
+- `notes`: пользовательские комментарии.
 
-### UserProfile
-- `id`: UUID
-- `email`: string
-- `displayName`: string
-- `locale`: string
-- `roles`: list of roles (`Owner`, `Contributor`, `Viewer`)
-- `preferences`: includes theme, default currency, notification settings
-- `connections`: linked external services with tokens (encrypted)
+### UserProfile (Профиль пользователя)
+- `id`: UUID.
+- `email`: строка.
+- `displayName`: строка.
+- `locale`: язык интерфейса.
+- `roles`: `Owner | Contributor | Viewer`.
+- `preferences`: тема, валюта, уведомления, настройки офлайн.
+- `connections`: внешние сервисы, хранение токенов (шифруется).
 
-### SyncQueueItem
-Represents a pending mutation for synchronization.
-- `id`: UUID
-- `entity`: string (e.g., `ProjectEstimate`)
-- `entityId`: UUID
-- `operation`: enum `Create | Update | Delete`
-- `payload`: JSON delta
-- `createdAt`: timestamp
-- `retryCount`: integer
-- `status`: enum `Pending | Processing | Completed | Failed`
+### SyncQueueItem (Очередь синхронизации)
+- `id`: UUID.
+- `entity`: тип сущности.
+- `entityId`: UUID.
+- `operation`: `Create | Update | Delete`.
+- `payload`: JSON-дельта.
+- `createdAt`: timestamp.
+- `retryCount`: целое.
+- `status`: `Pending | Processing | Completed | Failed`.
+- `error`: информация о последней ошибке.
 
-## Relationships
-- `ProjectEstimate` 1—* `EstimateItem`
-- `ProjectEstimate` 1—* `EstimateVersion`
-- `ProjectEstimate` 1—* `AgentSession` (through contextual runs)
-- `AgentConfig` 1—* `AgentSession`
-- `UserProfile` 1—* `ProjectEstimate` (ownership)
-- `UserProfile` 1—* `AgentConfig` (ownership)
-- `SyncQueueItem` references any entity via polymorphic association.
+## Связи
+- `ProjectEstimate` 1—* `EstimateItem`.
+- `ProjectEstimate` 1—* `EstimateVersion`.
+- `ProjectEstimate` 1—* `AgentSession` (через запуск аналитики по конкретной смете).
+- `AgentConfig` 1—* `AgentSession`.
+- `UserProfile` 1—* `ProjectEstimate` (владелец).
+- `UserProfile` 1—* `AgentConfig`.
+- `SyncQueueItem` ссылается на любую сущность через полиморфную связь.
 
-## Derived Data & Aggregations
-- Totals computed via reducer functions that aggregate child items recursively.
-- Profitability metrics derived from markup, labor rates, cost vs sell price.
-- Version diffs stored as JSON Patch for efficient reconstruction.
-- Agent performance analytics aggregated by agentId, type, success rate, avg cost.
+## Производные данные
+- Итоги и KPI рассчитываются редьюсерами, которые рекурсивно обходят дерево позиций.
+- Маржинальность = (итоговая цена − себестоимость) / итоговая цена.
+- Версионность: `EstimateVersion.diff` хранит JSON Patch; для восстановления используется последовательное применение патчей.
+- Статистика агентов: агрегирование по типам задач, времени выполнения, стоимости.
 
-## Validation Rules
-- Quantities and unit prices must be non-negative.
-- Currency conversions handled via FX service when project currency differs from user preference.
-- AgentConfig prompts validated to include required placeholders before activation.
-- SyncQueue operations capped to 10MB payload; larger changes chunked.
-- Attachments scanned for malware (if backend enabled) before syncing.
+## Правила валидации
+- Количество и цены не могут быть отрицательными; для `Labor` дополнительно проверяется ставка.
+- Наценка `markup` ограничена диапазоном 0–100% по умолчанию.
+- Позиции с типом `Material` требуют указания единицы измерения.
+- Агент не активируется, пока не заполнены обязательные placeholders в шаблоне промпта и не выбраны источники данных.
+- Очередь синхронизации не принимает payload > 10 МБ; крупные импорты дробятся на чанки.
 
-## Security & Privacy Considerations
-- Sensitive fields (supplier quotes, API tokens) encrypted at rest in IndexedDB using WebCrypto (AES-GCM) with keys derived from user credentials.
-- Agent sessions redact personal data before sending to Gemini unless explicit consent stored in preferences.
-- Audit log maintained for all changes to estimates and agent configurations.
+## Безопасность и конфиденциальность
+- В IndexedDB конфиденциальные поля (цены поставщиков, токены) шифруются WebCrypto (AES-GCM), ключи выводятся через PBKDF2 от пользовательского пароля.
+- Перед отправкой данных в Gemini запускается фильтр PII, который удаляет персональные данные клиентов.
+- Все операции записываются в аудит-лог с указанием пользователя, времени, типа действия.
 
-## Extensibility Notes
-- Support plugin interface for third-party integrations by allowing custom metadata schemas and additional entity types (e.g., `Invoice`).
-- Maintain backward compatibility through versioned schema migrations and transformation utilities.
+## Расширяемость
+- Метаданные позиции допускают пользовательские схемы (для интеграций с ERP/1С).
+- Через плагины можно добавлять новые типы сущностей (например, `Invoice`, `ScheduleItem`).
+- Миграции схемы документируются в changelog; каждая миграция имеет обратный шаг, позволяющий откат.
+
+## Диаграммы и документация
+- ER-диаграмма хранится в Figma (ссылка в `docs/roadmap.md`).
+- Контракты API описаны в `docs/api-contract.md`; каждая сущность привязана к эндпоинтам.
