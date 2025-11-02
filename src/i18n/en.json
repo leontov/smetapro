@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "SmetaPro",
+    "subtitle": "Smarter mobile-first cost estimation",
+    "start": "Start onboarding",
+    "continue": "Continue",
+    "skip": "Skip",
+    "done": "Done",
+    "themeToggle": "Toggle theme",
+    "language": "Language",
+    "cta": "Enter workspace",
+    "loading": "Preparing your workspace",
+    "voiceOverHint": "All controls are VoiceOver friendly",
+    "gestureHint": "Swipe to navigate steps",
+    "skeletonTitle": "Loading personalized estimates...",
+    "sampleProjects": "Sample projects",
+    "projectIndustrial": "Industrial complex",
+    "projectResidential": "Residential block",
+    "projectInterior": "Interior renovation",
+    "tutorialTitle": "Master SmetaPro in minutes",
+    "tutorialStep1": "Import estimates or start from our templates",
+    "tutorialStep2": "Collaborate with contractors in real time",
+    "tutorialStep3": "Validate budgets with AI suggestions",
+    "keySetupTitle": "Secure your data",
+    "keySetupDescription": "Generate encryption keys or add your own for end-to-end security.",
+    "keyGenerate": "Generate key",
+    "keyCopy": "Copy public key",
+    "a11y": {
+      "languageSwitcher": "Change language",
+      "sampleProject": "Open sample project {{name}}",
+      "step": "Onboarding step {{current}} of {{total}}"
+    }
+  },
+  "accessibility": {
+    "contrast": "High contrast mode enabled",
+    "reducedMotion": "Reduced motion is on"
+  },
+  "lighthouse": {
+    "title": "Lighthouse score target",
+    "performance": "Performance",
+    "accessibility": "Accessibility",
+    "bestPractices": "Best Practices",
+    "seo": "SEO"
+  }
+}

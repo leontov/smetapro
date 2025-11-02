@@ -1,0 +1,15 @@
+node_modules
+.dist
+.DS_Store
+.env
+npm-debug.log*
+dist
+.vscode
+
+# Playwright artifacts
+playwright-report
+playwright/.cache
+test-results
+
+# Logs
+*.log

@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "СметаПро",
+    "subtitle": "Умные мобильные сметы",
+    "start": "Начать обучение",
+    "continue": "Продолжить",
+    "skip": "Пропустить",
+    "done": "Готово",
+    "themeToggle": "Переключить тему",
+    "language": "Язык",
+    "cta": "Перейти в рабочую зону",
+    "loading": "Готовим ваш рабочий стол",
+    "voiceOverHint": "Все элементы доступны для VoiceOver",
+    "gestureHint": "Проводите пальцем для навигации",
+    "skeletonTitle": "Загружаем персональные данные...",
+    "sampleProjects": "Примеры проектов",
+    "projectIndustrial": "Промышленный комплекс",
+    "projectResidential": "Жилой квартал",
+    "projectInterior": "Дизайн интерьера",
+    "tutorialTitle": "Освойте СметаПро за минуты",
+    "tutorialStep1": "Импортируйте сметы или начните с шаблонов",
+    "tutorialStep2": "Работайте с подрядчиками в реальном времени",
+    "tutorialStep3": "Проверяйте бюджеты с помощью ИИ",
+    "keySetupTitle": "Защитите данные",
+    "keySetupDescription": "Создайте ключи шифрования или добавьте свои для сквозной защиты.",
+    "keyGenerate": "Сгенерировать ключ",
+    "keyCopy": "Скопировать открытый ключ",
+    "a11y": {
+      "languageSwitcher": "Изменить язык",
+      "sampleProject": "Открыть пример проекта {{name}}",
+      "step": "Шаг обучения {{current}} из {{total}}"
+    }
+  },
+  "accessibility": {
+    "contrast": "Включён высококонтрастный режим",
+    "reducedMotion": "Уменьшение анимации активно"
+  },
+  "lighthouse": {
+    "title": "Целевые показатели Lighthouse",
+    "performance": "Производительность",
+    "accessibility": "Доступность",
+    "bestPractices": "Лучшие практики",
+    "seo": "SEO"
+  }
+}
